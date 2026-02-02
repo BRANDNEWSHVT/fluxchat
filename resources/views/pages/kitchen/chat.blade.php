@@ -725,14 +725,22 @@ new class extends Component
                             if (data.usage) this.usage = data.usage;
                             if (data.conversation_id) this.conversationId = data.conversation_id;
                             
-                            this.$wire.dispatch('stream-complete', { conversationId: this.conversationId });
-                            
-                            setTimeout(() => {
-                                this.streamingContent = '';
-                                this.streamingModel = null;
-                                this.streamCompleted = false;
-                                this.pendingUserMessage = null;
-                            }, 500);
+                            // Use await to ensure Livewire round-trip completes before clearing optimistic UI
+                            // This prevents flickering where content disappears before the new message list renders
+                            (async () => {
+                                try {
+                                    await this.$wire.handleStreamComplete(this.conversationId);
+                                    
+                                    this.streamingContent = '';
+                                    this.streamingModel = null;
+                                    this.streamCompleted = false;
+                                    this.pendingUserMessage = null;
+                                } catch (e) {
+                                    console.error('Failed to sync conversation:', e);
+                                    // Fallback if call fails
+                                    this.resetStreamState();
+                                }
+                            })();
                             break;
                         case 'error':
                             this.error = data.message;
