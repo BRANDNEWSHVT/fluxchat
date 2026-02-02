@@ -33,25 +33,29 @@ new class extends Component
                 'title' => 'Total Conversations',
                 'value' => number_format($conversationsCount),
                 'icon' => 'chat-bubble-left-right',
-                'color' => 'blue',
+                'bgClass' => 'bg-blue-100 dark:bg-blue-900/30',
+                'iconClass' => 'text-blue-600 dark:text-blue-400',
             ],
             [
                 'title' => 'Messages Sent',
                 'value' => number_format($messagesCount),
                 'icon' => 'chat-bubble-bottom-center-text',
-                'color' => 'purple',
+                'bgClass' => 'bg-purple-100 dark:bg-purple-900/30',
+                'iconClass' => 'text-purple-600 dark:text-purple-400',
             ],
             [
                 'title' => 'Active Providers',
                 'value' => $providersCount,
                 'icon' => 'server-stack',
-                'color' => 'green',
+                'bgClass' => 'bg-green-100 dark:bg-green-900/30',
+                'iconClass' => 'text-green-600 dark:text-green-400',
             ],
             [
                 'title' => 'Tokens Used',
                 'value' => $this->formatTokens($tokensUsed),
                 'icon' => 'calculator',
-                'color' => 'amber',
+                'bgClass' => 'bg-amber-100 dark:bg-amber-900/30',
+                'iconClass' => 'text-amber-600 dark:text-amber-400',
             ],
         ];
     }
@@ -89,10 +93,10 @@ new class extends Component
     protected function emptyStats(): array
     {
         return [
-            ['title' => 'Total Conversations', 'value' => '0', 'icon' => 'chat-bubble-left-right', 'color' => 'blue'],
-            ['title' => 'Messages Sent', 'value' => '0', 'icon' => 'chat-bubble-bottom-center-text', 'color' => 'purple'],
-            ['title' => 'Active Providers', 'value' => '0', 'icon' => 'server-stack', 'color' => 'green'],
-            ['title' => 'Tokens Used', 'value' => '0', 'icon' => 'calculator', 'color' => 'amber'],
+            ['title' => 'Total Conversations', 'value' => '0', 'icon' => 'chat-bubble-left-right', 'bgClass' => 'bg-blue-100 dark:bg-blue-900/30', 'iconClass' => 'text-blue-600 dark:text-blue-400'],
+            ['title' => 'Messages Sent', 'value' => '0', 'icon' => 'chat-bubble-bottom-center-text', 'bgClass' => 'bg-purple-100 dark:bg-purple-900/30', 'iconClass' => 'text-purple-600 dark:text-purple-400'],
+            ['title' => 'Active Providers', 'value' => '0', 'icon' => 'server-stack', 'bgClass' => 'bg-green-100 dark:bg-green-900/30', 'iconClass' => 'text-green-600 dark:text-green-400'],
+            ['title' => 'Tokens Used', 'value' => '0', 'icon' => 'calculator', 'bgClass' => 'bg-amber-100 dark:bg-amber-900/30', 'iconClass' => 'text-amber-600 dark:text-amber-400'],
         ];
     }
 
@@ -125,8 +129,8 @@ new class extends Component
         @foreach ($this->stats as $stat)
             <div class="bg-zinc-50 dark:bg-zinc-800/50 rounded-xl p-6 border border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="w-10 h-10 rounded-lg bg-{{ $stat['color'] }}-100 dark:bg-{{ $stat['color'] }}-900/30 flex items-center justify-center">
-                        <flux:icon :name="$stat['icon']" class="size-5 text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400" />
+                    <div class="w-10 h-10 rounded-lg {{ $stat['bgClass'] }} flex items-center justify-center">
+                        <flux:icon :name="$stat['icon']" class="size-5 {{ $stat['iconClass'] }}" />
                     </div>
                 </div>
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $stat['title'] }}</p>
@@ -154,7 +158,7 @@ new class extends Component
                         class="flex items-center gap-4 p-4 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors"
                         wire:navigate
                     >
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white">
+                        <div class="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white">
                             <flux:icon.chat-bubble-left class="size-5" />
                         </div>
                         <div class="flex-1 min-w-0">
@@ -195,9 +199,7 @@ new class extends Component
             <div class="divide-y divide-zinc-200 dark:divide-zinc-700">
                 @forelse($this->providers as $provider)
                     <div class="flex items-center gap-4 p-4">
-                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">
-                            {{ strtoupper(substr($provider->name, 0, 1)) }}
-                        </div>
+                        <x-provider-icon :provider="$provider->name" />
                         <div class="flex-1">
                             <p class="font-medium text-zinc-900 dark:text-zinc-100">
                                 {{ ucfirst($provider->name) }}

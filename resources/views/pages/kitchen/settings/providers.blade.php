@@ -537,9 +537,7 @@ new class extends Component
                             <div class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                                            {{ strtoupper(substr($provider->name, 0, 1)) }}
-                                        </div>
+                                        <x-provider-icon :provider="$provider->name" />
                                         <div>
                                             <flux:heading size="sm">{{ ucfirst($provider->name) }}</flux:heading>
                                             <p class="text-xs text-zinc-500">
@@ -647,9 +645,7 @@ new class extends Component
                                 class="border border-zinc-200 dark:border-zinc-700 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-left"
                             >
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-500">
-                                        {{ strtoupper(substr($name, 0, 1)) }}
-                                    </div>
+                                    <x-provider-icon :provider="$name" />
                                     <flux:heading size="sm">{{ ucfirst($name) }}</flux:heading>
                                 </div>
                             </button>

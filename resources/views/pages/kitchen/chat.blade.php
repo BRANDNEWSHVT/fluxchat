@@ -381,8 +381,7 @@ new class extends Component
                             <div class="flex items-center gap-2">
                                 @if($this->providers->count() > 0)
                                     <flux:select
-                                        wire:model.live="selectedModelId"
-                                        x-on:change="modelId = $event.target.value"
+                                        x-model="modelId"
                                         size="sm"
                                         x-bind:disabled="isStreaming"
                                     >
@@ -444,15 +443,8 @@ new class extends Component
                 lastMessage: null,
 
                 init() {
-                    // Wait for Livewire to be fully initialized before watching $wire properties
-                    // This prevents "toJSON does not exist" race condition on first page load
-                    this.$nextTick(() => {
-                        if (this.$wire && typeof this.$wire.selectedModelId !== 'undefined') {
-                            this.$watch('$wire.selectedModelId', (value) => {
-                                if (value) this.modelId = value;
-                            });
-                        }
-                    });
+                    // Model selection is now handled purely through Alpine x-model
+                    // No need to watch $wire.selectedModelId
                 },
 
                 resetChat() {
