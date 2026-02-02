@@ -444,9 +444,14 @@ new class extends Component
                 lastMessage: null,
 
                 init() {
-                    // Listen for Livewire model changes
-                    this.$watch('$wire.selectedModelId', (value) => {
-                        if (value) this.modelId = value;
+                    // Wait for Livewire to be fully initialized before watching $wire properties
+                    // This prevents "toJSON does not exist" race condition on first page load
+                    this.$nextTick(() => {
+                        if (this.$wire && typeof this.$wire.selectedModelId !== 'undefined') {
+                            this.$watch('$wire.selectedModelId', (value) => {
+                                if (value) this.modelId = value;
+                            });
+                        }
                     });
                 },
 
