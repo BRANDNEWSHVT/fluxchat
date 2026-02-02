@@ -252,10 +252,26 @@ new class extends Component
         <div class="flex-1 flex flex-col bg-white dark:bg-zinc-800">
             {{-- Messages Container --}}
             <div
-                class="flex-1 overflow-y-auto p-6"
+                class="flex-1 overflow-y-auto p-6 relative"
                 x-ref="messagesContainer"
                 x-init="$watch('streamingContent', () => scrollToBottom())"
             >
+                {{-- Loading skeleton - visible before Alpine initializes --}}
+                {{-- Uses inline style to show by default, Alpine hides it once ready --}}
+                <div
+                    id="chat-loading-skeleton"
+                    class="absolute inset-0 flex items-center justify-center bg-white dark:bg-zinc-800 z-10 transition-opacity duration-300"
+                    x-init="$el.remove()"
+                >
+                    <div class="text-center animate-pulse">
+                        <div class="w-16 h-16 mx-auto mb-6 bg-zinc-200 dark:bg-zinc-700 rounded-2xl flex items-center justify-center">
+                            <flux:icon.chat-bubble-left-right class="size-8 text-zinc-400 dark:text-zinc-500" />
+                        </div>
+                        <div class="h-6 w-48 mx-auto bg-zinc-200 dark:bg-zinc-700 rounded mb-2"></div>
+                        <div class="h-4 w-32 mx-auto bg-zinc-100 dark:bg-zinc-800 rounded"></div>
+                    </div>
+                </div>
+
                 <template x-if="!conversationId && messages.length === 0 && !pendingUserMessage">
                     {{-- Welcome Screen --}}
                     <div class="flex-1 flex items-center justify-center h-full">
@@ -421,7 +437,13 @@ new class extends Component
 
     @push('scripts')
     <script>
-        document.addEventListener('alpine:init', () => {
+        // Define the registration function globally or in this scope
+        function registerChatStreamComponent() {
+            // Prevent re-registration if it already exists
+            // Access internal data registry safely if possible, or just try-catch
+            // Alpine doesn't expose a simple check method, but re-registering usually warns/overwrites.
+            // We'll wrap in try-catch to be safe or just run it.
+            
             Alpine.data('chatStream', (config) => ({
                 // Configuration
                 conversationId: config.conversationId,
@@ -443,8 +465,7 @@ new class extends Component
                 lastMessage: null,
 
                 init() {
-                    // Model selection is now handled purely through Alpine x-model
-                    // No need to watch $wire.selectedModelId
+                    // Initialize
                 },
 
                 resetChat() {
@@ -472,24 +493,15 @@ new class extends Component
                 },
 
                 renderMarkdown(content) {
-                    // Basic markdown rendering - in production, use a proper library
-                    // For now, just handle basic formatting and preserve newlines
                     if (!content) return '';
-
                     return content
-                        // Escape HTML
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;')
-                        // Code blocks (triple backticks)
                         .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-zinc-200 dark:bg-zinc-600 p-3 rounded-lg overflow-x-auto my-2"><code>$2</code></pre>')
-                        // Inline code
                         .replace(/`([^`]+)`/g, '<code class="bg-zinc-200 dark:bg-zinc-600 px-1 py-0.5 rounded">$1</code>')
-                        // Bold
                         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-                        // Italic
                         .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-                        // Line breaks
                         .replace(/\n/g, '<br>');
                 },
 
@@ -502,10 +514,7 @@ new class extends Component
                         return;
                     }
 
-                    // Store for retry functionality
                     this.lastMessage = trimmedMessage;
-
-                    // Optimistic UI update
                     this.pendingUserMessage = trimmedMessage;
                     this.message = '';
                     this.error = null;
@@ -514,10 +523,7 @@ new class extends Component
                     this.streamingContent = '';
                     this.streamingModel = null;
 
-                    // Scroll to show new message
                     this.scrollToBottom();
-
-                    // Create abort controller for cancellation
                     this.abortController = new AbortController();
 
                     try {
@@ -547,40 +553,28 @@ new class extends Component
 
                         while (true) {
                             const { done, value } = await reader.read();
-
                             if (done) break;
 
                             buffer += decoder.decode(value, { stream: true });
-
-                            // Process complete SSE events
                             const lines = buffer.split('\n');
-                            buffer = lines.pop() || ''; // Keep incomplete line in buffer
+                            buffer = lines.pop() || '';
 
                             for (const line of lines) {
-                                if (line.startsWith('event:')) {
-                                    continue; // Event type line, data follows
-                                }
-
                                 if (line.startsWith('data:')) {
                                     const jsonStr = line.slice(5).trim();
-                                    if (!jsonStr) continue;
-
+                                    if (!jsonStr || jsonStr === '[DONE]') continue;
                                     try {
-                                        const data = JSON.parse(jsonStr);
-                                        this.handleStreamEvent(data);
+                                        this.handleStreamEvent(JSON.parse(jsonStr));
                                     } catch (e) {
-                                        console.error('Failed to parse SSE data:', jsonStr, e);
+                                        console.error('Failed to parse SSE data:', e);
                                     }
                                 }
                             }
                         }
                     } catch (err) {
-                        if (err.name === 'AbortError') {
-                            // User cancelled - keep partial content
-                            console.log('Stream aborted by user');
-                        } else {
+                        if (err.name !== 'AbortError') {
+                            this.error = err.message || 'Failed to send message.';
                             console.error('Stream error:', err);
-                            this.error = err.message || 'Failed to send message. Please try again.';
                         }
                     } finally {
                         this.isStreaming = false;
@@ -592,60 +586,54 @@ new class extends Component
                     switch (data.type) {
                         case 'start':
                             this.conversationId = data.conversation_id;
-                            this.streamingModel = data.model || null;
+                            this.streamingModel = data.model;
                             break;
-
                         case 'delta':
                             this.streamingContent += data.content || '';
                             this.scrollToBottom();
                             break;
-
                         case 'end':
-                            if (data.conversation_id) {
-                                this.conversationId = data.conversation_id;
-                            }
-
-                            if (data.usage) {
-                                this.usage = data.usage;
-                            }
-
                             this.isStreaming = false;
                             this.streamCompleted = true;
-                            this.pendingUserMessage = null;
-
+                            if (data.usage) this.usage = data.usage;
+                            if (data.conversation_id) this.conversationId = data.conversation_id;
+                            
                             this.$wire.dispatch('stream-complete', { conversationId: this.conversationId });
-
+                            
                             setTimeout(() => {
                                 this.streamingContent = '';
                                 this.streamingModel = null;
                                 this.streamCompleted = false;
+                                this.pendingUserMessage = null;
                             }, 500);
                             break;
-
                         case 'error':
-                            this.error = data.message || 'An error occurred during streaming.';
+                            this.error = data.message;
                             this.isStreaming = false;
                             break;
                     }
                 },
 
                 abortStream() {
-                    if (this.abortController) {
-                        this.abortController.abort();
-                    }
+                    if (this.abortController) this.abortController.abort();
                 },
 
                 retryLastMessage() {
                     if (this.lastMessage) {
                         this.message = this.lastMessage;
-                        this.error = null;
-                        this.pendingUserMessage = null;
-                        this.streamingContent = '';
                         this.sendMessage();
                     }
-                },
+                }
             }));
-        });
+        }
+
+        // Register immediately if Alpine is already present (for wire:navigate)
+        if (typeof Alpine !== 'undefined') {
+            registerChatStreamComponent();
+        }
+
+        // Also listen for alpine:init for fresh page loads
+        document.addEventListener('alpine:init', registerChatStreamComponent);
     </script>
     @endpush
     @endvolt
