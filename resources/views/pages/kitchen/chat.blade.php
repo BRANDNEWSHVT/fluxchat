@@ -157,6 +157,110 @@ new class extends Component
     }
 }; ?>
 
+@assets
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+    /* Chat Message Typography */
+    .prose-chat {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: inherit;
+    }
+    
+    .prose-chat p {
+        margin-bottom: 0.75em;
+    }
+    .prose-chat p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Headings */
+    .prose-chat h1, .prose-chat h2, .prose-chat h3, .prose-chat h4 {
+        font-weight: 600;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        line-height: 1.3;
+    }
+    .prose-chat h1 { font-size: 1.5em; }
+    .prose-chat h2 { font-size: 1.3em; }
+    .prose-chat h3 { font-size: 1.1em; }
+    
+    /* Lists */
+    .prose-chat ul, .prose-chat ol {
+        margin-bottom: 0.75em;
+        padding-left: 1.5em;
+    }
+    .prose-chat ul { list-style-type: disc; }
+    .prose-chat ol { list-style-type: decimal; }
+    .prose-chat li { margin-bottom: 0.25em; }
+
+    /* Code Blocks - GitHub Dark Style */
+    .prose-chat pre {
+        background-color: #0d1117; /* GitHub Dark bg */
+        color: #c9d1d9;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        margin: 0.75em 0;
+        border: 1px solid #30363d;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.85em;
+    }
+    
+    /* Inline Code */
+    .prose-chat code:not(pre code) {
+        background-color: rgba(175, 184, 193, 0.2);
+        padding: 0.2em 0.4em;
+        border-radius: 6px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.85em;
+        white-space: break-spaces;
+    }
+
+    /* Links */
+    .prose-chat a {
+        color: #58a6ff;
+        text-decoration: none;
+    }
+    .prose-chat a:hover {
+        text-decoration: underline;
+    }
+
+    /* Blockquotes */
+    .prose-chat blockquote {
+        border-left: 4px solid #30363d;
+        color: #8b949e;
+        padding-left: 1em;
+        margin: 1em 0;
+        font-style: italic;
+    }
+
+    /* Tables */
+    .prose-chat table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+        font-size: 0.9em;
+    }
+    .prose-chat th, .prose-chat td {
+        border: 1px solid #30363d;
+        padding: 0.5em 0.75em;
+        text-align: left;
+    }
+    .prose-chat th {
+        background-color: rgba(175, 184, 193, 0.1);
+        font-weight: 600;
+    }
+    
+    /* Dark Mode Support */
+    .dark .prose-chat code:not(pre code) {
+        background-color: rgba(110, 118, 129, 0.4);
+    }
+</style>
+@endassets
+
 <x-layouts.app :title="__('Chat')">
     @volt('chat')
     <div
@@ -298,9 +402,7 @@ new class extends Component
                                             </flux:badge>
                                         </div>
                                     @endif
-                                    <div class="prose dark:prose-invert prose-sm max-w-none">
-                                        {!! \Illuminate\Support\Str::markdown($msg->content) !!}
-                                    </div>
+                                    <div class="prose-chat max-w-none" x-html="renderMarkdown(@js($msg->content))"></div>
                                 </div>
                             </div>
                         @endforeach
@@ -309,7 +411,7 @@ new class extends Component
                     {{-- Pending user message (optimistic UI) --}}
                     <div x-show="pendingUserMessage" x-cloak class="flex justify-end">
                         <div class="max-w-[80%] bg-blue-500 text-white rounded-2xl px-4 py-3">
-                            <div class="prose prose-invert prose-sm max-w-none whitespace-pre-wrap" x-text="pendingUserMessage"></div>
+                            <div class="prose-chat max-w-none break-words" x-html="renderMarkdown(pendingUserMessage)"></div>
                         </div>
                     </div>
 
@@ -324,7 +426,7 @@ new class extends Component
                             </div>
 
                             {{-- Streaming content or typing indicator --}}
-                            <div class="prose dark:prose-invert prose-sm max-w-none">
+                            <div class="prose-chat max-w-none">
                                 <div x-show="streamingContent" x-html="renderMarkdown(streamingContent)"></div>
                                 <div x-show="isStreaming && !streamingContent" class="flex items-center gap-1">
                                     <div class="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"></div>
@@ -494,6 +596,31 @@ new class extends Component
 
                 renderMarkdown(content) {
                     if (!content) return '';
+                    
+                    // Use marked.js if available
+                    if (typeof marked !== 'undefined') {
+                        if (!this._markedConfigured) {
+                            marked.setOptions({
+                                gfm: true,
+                                breaks: true,
+                                highlight: function(code, lang) {
+                                    if (typeof hljs !== 'undefined') {
+                                        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+                                        return hljs.highlight(code, { language }).value;
+                                    }
+                                    return code;
+                                }
+                            });
+                            this._markedConfigured = true;
+                        }
+                        try {
+                            return marked.parse(content);
+                        } catch (e) {
+                            console.error('Marked error:', e);
+                        }
+                    }
+
+                    // Fallback to simple regex replacement
                     return content
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
