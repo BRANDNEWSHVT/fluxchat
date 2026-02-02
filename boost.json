@@ -1,0 +1,21 @@
+{
+    "agents": [
+        "opencode",
+        "copilot"
+    ],
+    "guidelines": true,
+    "herd_mcp": true,
+    "mcp": true,
+    "packages": [
+        "prism-php/prism"
+    ],
+    "sail": false,
+    "skills": [
+        "folio-routing",
+        "fluxui-development",
+        "volt-development",
+        "pest-testing",
+        "tailwindcss-development",
+        "developing-with-prism"
+    ]
+}
