@@ -384,9 +384,9 @@ final class Stream
             $options,
         );
 
-        Log::info('Cliproxy Stream Request', [
+        Log::debug('Cliproxy Stream Request', [
             'url' => $this->provider->url,
-            'payload' => $payload,
+            'model' => $request->model(),
         ]);
 
         try {

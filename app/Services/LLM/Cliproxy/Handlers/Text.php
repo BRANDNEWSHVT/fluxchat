@@ -110,9 +110,9 @@ final class Text
             'max_tokens' => $request->maxTokens(),
         ], $options);
 
-        Log::info('Cliproxy Text Request', [
+        Log::debug('Cliproxy Text Request', [
             'url' => $this->provider->url,
-            'payload' => $payload,
+            'model' => $request->model(),
         ]);
 
         /** @var Response $response */

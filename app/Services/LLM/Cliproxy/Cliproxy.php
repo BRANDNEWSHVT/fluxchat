@@ -9,7 +9,6 @@ use App\Services\LLM\Cliproxy\Handlers\Text;
 use Generator;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Override;
 use Prism\Prism\Providers\Provider;
 use Prism\Prism\Text\Request as TextRequest;
@@ -20,13 +19,7 @@ final class Cliproxy extends Provider
     public function __construct(
         public readonly string $apiKey,
         public readonly string $url,
-    ) {
-        Log::debug('Cliproxy provider initialized', [
-            'apiKey_length' => mb_strlen($apiKey),
-            'apiKey_prefix' => mb_substr($apiKey, 0, 10).'...',
-            'url' => $url,
-        ]);
-    }
+    ) {}
 
     public function client(): PendingRequest
     {
