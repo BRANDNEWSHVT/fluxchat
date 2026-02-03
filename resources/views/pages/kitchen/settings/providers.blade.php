@@ -535,6 +535,13 @@ new class extends Component
     @volt('settings.providers')
     <div>
         <div class="max-w-4xl mx-auto">
+            <div class="mb-6">
+                <a href="{{ route('kitchen.chat') }}" class="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300" wire:navigate>
+                    <flux:icon.arrow-left class="size-4" />
+                    Back to Chat
+                </a>
+            </div>
+
             <flux:heading size="xl">Provider Settings</flux:heading>
             <p class="mt-2 text-zinc-500">Configure your LLM providers and API keys</p>
 
