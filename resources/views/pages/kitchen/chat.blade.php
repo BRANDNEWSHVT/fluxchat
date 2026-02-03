@@ -168,7 +168,7 @@ new class extends Component
         line-height: 1.6;
         color: inherit;
     }
-    
+
     .prose-chat p {
         margin-bottom: 0.75em;
     }
@@ -186,7 +186,7 @@ new class extends Component
     .prose-chat h1 { font-size: 1.5em; }
     .prose-chat h2 { font-size: 1.3em; }
     .prose-chat h3 { font-size: 1.1em; }
-    
+
     /* Lists */
     .prose-chat ul, .prose-chat ol {
         margin-bottom: 0.75em;
@@ -208,7 +208,7 @@ new class extends Component
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         font-size: 0.85em;
     }
-    
+
     /* Inline Code */
     .prose-chat code:not(pre code) {
         background-color: rgba(175, 184, 193, 0.2);
@@ -253,7 +253,7 @@ new class extends Component
         background-color: rgba(175, 184, 193, 0.1);
         font-weight: 600;
     }
-    
+
     /* Dark Mode Support */
     .dark .prose-chat code:not(pre code) {
         background-color: rgba(110, 118, 129, 0.4);
@@ -545,7 +545,7 @@ new class extends Component
             // Access internal data registry safely if possible, or just try-catch
             // Alpine doesn't expose a simple check method, but re-registering usually warns/overwrites.
             // We'll wrap in try-catch to be safe or just run it.
-            
+
             Alpine.data('chatStream', (config) => ({
                 // Configuration
                 conversationId: config.conversationId,
@@ -567,7 +567,18 @@ new class extends Component
                 lastMessage: null,
 
                 init() {
-                    // Initialize
+                    // Restore last used model from localStorage
+                    const savedModelId = localStorage.getItem('fluxchat_last_model_id');
+                    if (savedModelId) {
+                        this.modelId = parseInt(savedModelId);
+                    }
+
+                    // Watch for model changes and persist to localStorage
+                    this.$watch('modelId', (value) => {
+                        if (value) {
+                            localStorage.setItem('fluxchat_last_model_id', value);
+                        }
+                    });
                 },
 
                 resetChat() {
@@ -596,7 +607,7 @@ new class extends Component
 
                 renderMarkdown(content) {
                     if (!content) return '';
-                    
+
                     // Use marked.js if available
                     if (typeof marked !== 'undefined') {
                         if (!this._markedConfigured) {
@@ -724,13 +735,13 @@ new class extends Component
                             this.streamCompleted = true;
                             if (data.usage) this.usage = data.usage;
                             if (data.conversation_id) this.conversationId = data.conversation_id;
-                            
+
                             // Use await to ensure Livewire round-trip completes before clearing optimistic UI
                             // This prevents flickering where content disappears before the new message list renders
                             (async () => {
                                 try {
                                     await this.$wire.handleStreamComplete(this.conversationId);
-                                    
+
                                     this.streamingContent = '';
                                     this.streamingModel = null;
                                     this.streamCompleted = false;
