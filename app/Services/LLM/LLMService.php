@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Provider;
 use Generator;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Prism\Prism\Enums\Provider as PrismProvider;
 use Prism\Prism\Enums\StreamEventType;
@@ -23,16 +24,13 @@ final class LLMService
         AiModel $model,
         Conversation $conversation,
         string $userMessage,
-        ?string $systemPrompt = null
+        ?string $systemPrompt = null,
     ): Message {
         $messages = $this->buildMessageHistory($conversation);
 
         $prismProvider = $this->mapProvider($provider->name);
 
-        $prism = Prism::text()
-            ->using($prismProvider, $model->model_id);
-
-        // Pass the API key from database (multi-tenant support)
+        // Build provider config first
         $providerConfig = [];
         if ($provider->api_key) {
             $providerConfig['api_key'] = $provider->api_key;
@@ -40,9 +38,12 @@ final class LLMService
         if ($provider->base_url) {
             $providerConfig['url'] = $provider->base_url;
         }
-        if (! empty($providerConfig)) {
-            $prism->usingProviderConfig($providerConfig);
-        }
+
+        // Log provider config for debugging
+        Log::debug('LLMService sendMessage provider config : ', $providerConfig);
+
+        // Pass config directly to using() to avoid double initialization
+        $prism = Prism::text()->using($prismProvider, $model->model_id, $providerConfig);
 
         if ($systemPrompt) {
             $prism->withSystemPrompt($systemPrompt);
@@ -75,16 +76,13 @@ final class LLMService
         AiModel $model,
         Conversation $conversation,
         string $userMessage,
-        ?string $systemPrompt = null
+        ?string $systemPrompt = null,
     ): Generator {
         $messages = $this->buildMessageHistory($conversation);
 
         $prismProvider = $this->mapProvider($provider->name);
 
-        $prism = Prism::text()
-            ->using($prismProvider, $model->model_id);
-
-        // Pass the API key from database (multi-tenant support)
+        // Build provider config first
         $providerConfig = [];
         if ($provider->api_key) {
             $providerConfig['api_key'] = $provider->api_key;
@@ -92,9 +90,9 @@ final class LLMService
         if ($provider->base_url) {
             $providerConfig['url'] = $provider->base_url;
         }
-        if (! empty($providerConfig)) {
-            $prism->usingProviderConfig($providerConfig);
-        }
+
+        // Pass config directly to using() to avoid double initialization
+        $prism = Prism::text()->using($prismProvider, $model->model_id, $providerConfig);
 
         if ($systemPrompt) {
             $prism->withSystemPrompt($systemPrompt);
@@ -164,7 +162,7 @@ final class LLMService
             Provider::NAME_OPENAI => PrismProvider::OpenAI,
             Provider::NAME_GEMINI => PrismProvider::Gemini,
             Provider::NAME_OLLAMA => PrismProvider::Ollama,
-            Provider::NAME_CLIPROXY => 'openai',
+            Provider::NAME_CLIPROXY => 'cliproxy',
             default => throw new InvalidArgumentException("Unknown provider: {$name}"),
         };
     }

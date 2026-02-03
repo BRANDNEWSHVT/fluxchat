@@ -168,9 +168,10 @@ new class extends Component
         unset($this->providers);
         unset($this->availableProviders);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => ucfirst($this->providerName).' provider added successfully.',
+        $this->dispatch('toast', [
+            'heading' => 'Provider Added',
+            'text' => ucfirst($this->providerName).' provider added successfully.',
+            'variant' => 'success',
         ]);
     }
 
@@ -202,9 +203,10 @@ new class extends Component
         $this->closeModals();
         unset($this->providers);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Provider updated successfully.',
+        $this->dispatch('toast', [
+            'heading' => 'Provider Updated',
+            'text' => 'Provider updated successfully.',
+            'variant' => 'success',
         ]);
     }
 
@@ -216,9 +218,10 @@ new class extends Component
             unset($this->providers);
             unset($this->availableProviders);
 
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Provider deleted.',
+            $this->dispatch('toast', [
+                'heading' => 'Provider Deleted',
+                'text' => 'Provider deleted.',
+                'variant' => 'success',
             ]);
         }
     }
@@ -260,14 +263,16 @@ new class extends Component
             $result = $ollamaService->syncModels($provider);
 
             if (! empty($result['errors'])) {
-                $this->dispatch('notify', [
-                    'type' => 'error',
-                    'message' => $result['errors'][0] ?? 'Failed to sync models.',
+                $this->dispatch('toast', [
+                    'heading' => 'Sync Failed',
+                    'text' => $result['errors'][0] ?? 'Failed to sync models.',
+                    'variant' => 'danger',
                 ]);
             } else {
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => "Synced {$result['synced']} models from Ollama.",
+                $this->dispatch('toast', [
+                    'heading' => 'Models Synced',
+                    'text' => "Synced {$result['synced']} models from Ollama.",
+                    'variant' => 'success',
                 ]);
             }
         } elseif ($provider->name === Provider::NAME_CLIPROXY) {
@@ -275,9 +280,10 @@ new class extends Component
             $models = $cliproxyService->fetchModels($provider);
 
             if (empty($models)) {
-                $this->dispatch('notify', [
-                    'type' => 'warning',
-                    'message' => 'No models found. Add models manually or check connection.',
+                $this->dispatch('toast', [
+                    'heading' => 'No Models Found',
+                    'text' => 'No models found. Add models manually or check connection.',
+                    'variant' => 'warning',
                 ]);
             } else {
                 $synced = 0;
@@ -298,16 +304,18 @@ new class extends Component
                     $synced++;
                 }
 
-                $this->dispatch('notify', [
-                    'type' => 'success',
-                    'message' => "Synced {$synced} models from CliproxyAPI.",
+                $this->dispatch('toast', [
+                    'heading' => 'Models Synced',
+                    'text' => "Synced {$synced} models from CliproxyAPI.",
+                    'variant' => 'success',
                 ]);
             }
         } else {
             $this->seedDefaultModels($provider);
-            $this->dispatch('notify', [
-                'type' => 'success',
-                'message' => 'Models refreshed.',
+            $this->dispatch('toast', [
+                'heading' => 'Models Refreshed',
+                'text' => 'Models refreshed.',
+                'variant' => 'success',
             ]);
         }
 
@@ -339,9 +347,10 @@ new class extends Component
 
         $this->isTesting = false;
 
-        $this->dispatch('notify', [
-            'type' => $result['success'] ? 'success' : 'error',
-            'message' => $result['message'],
+        $this->dispatch('toast', [
+            'heading' => $result['success'] ? 'Connection Successful' : 'Connection Failed',
+            'text' => $result['message'],
+            'variant' => $result['success'] ? 'success' : 'danger',
         ]);
     }
 
@@ -381,9 +390,10 @@ new class extends Component
     public function addModel(): void
     {
         if (empty(mb_trim($this->modelId)) || empty(mb_trim($this->modelDisplayName))) {
-            $this->dispatch('notify', [
-                'type' => 'error',
-                'message' => 'Model ID and display name are required.',
+            $this->dispatch('toast', [
+                'heading' => 'Validation Error',
+                'text' => 'Model ID and display name are required.',
+                'variant' => 'danger',
             ]);
 
             return;
@@ -407,9 +417,10 @@ new class extends Component
         $this->closeModals();
         unset($this->providers);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Model added successfully.',
+        $this->dispatch('toast', [
+            'heading' => 'Model Added',
+            'text' => 'Model added successfully.',
+            'variant' => 'success',
         ]);
     }
 
@@ -436,9 +447,10 @@ new class extends Component
         $this->closeModals();
         unset($this->providers);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Model updated successfully.',
+        $this->dispatch('toast', [
+            'heading' => 'Model Updated',
+            'text' => 'Model updated successfully.',
+            'variant' => 'success',
         ]);
     }
 
@@ -457,9 +469,10 @@ new class extends Component
         $model->delete();
         unset($this->providers);
 
-        $this->dispatch('notify', [
-            'type' => 'success',
-            'message' => 'Model deleted.',
+        $this->dispatch('toast', [
+            'heading' => 'Model Deleted',
+            'text' => 'Model deleted.',
+            'variant' => 'success',
         ]);
     }
 
