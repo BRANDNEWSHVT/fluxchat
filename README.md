@@ -11,6 +11,8 @@
 
 FluxChat is a modern, multi-provider AI chat application built with Laravel 12, Livewire 4, and Volt. It provides a beautiful, responsive interface for conversing with various LLM providers including OpenAI, Anthropic, Google Gemini, Ollama, and custom OpenAI-compatible APIs.
 
+![FluxChat Screenshot](screenshots/chat-page.png)
+
 ## Current Status
 
 This project is approximately **70% complete**. Core functionality is working, but several features are still being developed and polished.
@@ -371,54 +373,6 @@ Clear all caches:
 php artisan optimize:clear
 ```
 
-## API Reference
-
-### Streaming Endpoint
-
-```
-POST /chat/stream
-```
-
-**Request Body:**
-```json
-{
-  "conversation_id": 1,        // null for new conversation
-  "model_id": 5,               // required
-  "message": "Hello!",         // required, max 32000 chars
-  "system_prompt": "..."       // optional, max 8000 chars
-}
-```
-
-**SSE Events:**
-- `start` - Stream initiated, includes `conversation_id` and `model`
-- `delta` - Token chunk, includes `content`
-- `end` - Stream complete, includes `usage` stats
-- `error` - Error occurred, includes `message`
-
-## Known Issues & Limitations
-
-> **Note:** As this project is a work in progress, please be aware of the following:
-
-- **No authentication** - Currently single-user only; multi-user support is planned
-- **Limited error handling** - Some edge cases may not be gracefully handled
-- **Incomplete test coverage** - Tests are being added incrementally
-- **API changes** - Internal APIs and database schema may change without migration paths
-
-## Contributing
-
-Contributions are welcome, but please note this project is in active development. Before starting work on a feature:
-
-1. Check the [Current Status](#current-status) section to see if it's already planned
-2. Open an issue to discuss your proposed changes
-3. Fork the repository
-4. Create a feature branch: `git checkout -b feature/amazing-feature`
-5. Make your changes and add tests
-6. Run tests: `php artisan test`
-7. Run linting: `./vendor/bin/pint`
-8. Commit: `git commit -m 'Add amazing feature'`
-9. Push: `git push origin feature/amazing-feature`
-10. Open a Pull Request
-
 ## License
 
 This project is open-source and available under the MIT License.
@@ -431,9 +385,3 @@ This project is open-source and available under the MIT License.
 - [Laravel Prism](https://github.com/prism-php/prism) - Multi-provider LLM integration
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 - [Alpine.js](https://alpinejs.dev/) - Lightweight JavaScript framework
-
----
-
-**🚧 This project is a work in progress. Star the repo to follow development!**
-
-Built with ❤️ using Laravel and Livewire.
